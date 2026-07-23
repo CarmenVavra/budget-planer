@@ -1,0 +1,16 @@
+<nav class="nav">
+  <a class="nav-brand" routerLink="/uebersicht">Kontobuch</a>
+
+  <a routerLink="/uebersicht" routerLinkActive [ariaCurrentWhenActive]="'page'">Übersicht</a>
+  <a routerLink="/transaktionen" routerLinkActive [ariaCurrentWhenActive]="'page'">Transaktionen</a>
+  <a routerLink="/bezeichnungen" routerLinkActive [ariaCurrentWhenActive]="'page'">Bezeichnungen</a>
+
+  <button type="button" class="btn btn-primary" (click)="openNewExpense()">
+    <app-icon name="plus" [size]="14" />
+    Neue Ausgabe
+  </button>
+
+  <button type="button" class="btn btn-secondary" (click)="logout()" title="Abmelden">
+    {{ userEmail() }}
+  </button>
+</nav>

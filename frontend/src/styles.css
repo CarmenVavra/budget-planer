@@ -1,0 +1,12 @@
+@import './styles/tokens.css';
+@import './styles/layout.css';
+
+html,
+body {
+  height: 100%;
+}
+
+/* CDK Dialog is unstyled by default — theme its backdrop to match .dialog-backdrop. */
+.dialog-backdrop-cdk {
+  background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+}

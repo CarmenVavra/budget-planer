@@ -1,0 +1,57 @@
+<app-auth-shell>
+  <app-icon icon name="wallet" [size]="22" />
+
+  <div style="width: 100%; text-align: left">
+    <h1 style="font-size: 22px; margin: 0 0 4px">Willkommen zurück</h1>
+    <p class="text-muted" style="font-size: 13px; margin: 0">
+      Melde dich an, um deine Einnahmen und Ausgaben zu sehen.
+    </p>
+  </div>
+
+  <form style="width: 100%; display: grid; gap: var(--space-3)" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="login-email">E-Mail</label>
+      <input
+        id="login-email"
+        class="input"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        [class.has-error]="form.controls.email.invalid && form.controls.email.touched"
+      />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <p class="field-error">Bitte gib eine gültige E-Mail-Adresse ein.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="login-password">Passwort</label>
+      <input
+        id="login-password"
+        class="input"
+        type="password"
+        autocomplete="current-password"
+        formControlName="password"
+        [class.has-error]="form.controls.password.invalid && form.controls.password.touched"
+      />
+    </div>
+
+    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; opacity: 0.75">
+      <input type="checkbox" formControlName="rememberMe" />
+      Angemeldet bleiben
+    </label>
+
+    @if (errorMessage()) {
+      <p class="field-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting()">
+      {{ submitting() ? 'Anmelden…' : 'Anmelden' }}
+    </button>
+  </form>
+
+  <p class="text-muted" style="font-size: 13px; margin: 0">
+    Noch kein Konto?
+    <a routerLink="/registrieren" style="color: var(--color-accent-700)">Registrieren</a>
+  </p>
+</app-auth-shell>

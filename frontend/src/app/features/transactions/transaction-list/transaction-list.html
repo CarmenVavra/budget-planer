@@ -1,0 +1,118 @@
+<div class="scrn-page">
+  <div class="scrn-row">
+    <h1 class="scrn-h1">Transaktionen</h1>
+    <button type="button" class="btn btn-primary" (click)="openNewExpense()">
+      <app-icon name="plus" [size]="14" />
+      Neue Ausgabe
+    </button>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap">
+    <div class="seg">
+      <label class="seg-opt">
+        <input type="radio" name="type-filter" [checked]="typeFilter() === 'Alle'" (change)="setTypeFilter('Alle')" />
+        Alle
+      </label>
+      <label class="seg-opt">
+        <input type="radio" name="type-filter" [checked]="typeFilter() === 'Einnahme'" (change)="setTypeFilter('Einnahme')" />
+        Einnahmen
+      </label>
+      <label class="seg-opt">
+        <input type="radio" name="type-filter" [checked]="typeFilter() === 'Ausgabe'" (change)="setTypeFilter('Ausgabe')" />
+        Ausgaben
+      </label>
+    </div>
+
+    @if (typeFilter() !== 'Einnahme') {
+      <span
+        class="chip"
+        [class.chip-active]="artFilter() === 'Fix'"
+        role="button"
+        tabindex="0"
+        (click)="toggleArtFilter('Fix')"
+        (keydown.enter)="toggleArtFilter('Fix')"
+        >Fix</span
+      >
+      <span
+        class="chip"
+        [class.chip-active]="artFilter() === 'Variabel'"
+        role="button"
+        tabindex="0"
+        (click)="toggleArtFilter('Variabel')"
+        (keydown.enter)="toggleArtFilter('Variabel')"
+        >Variabel</span
+      >
+    }
+
+    <input
+      class="input"
+      style="max-width: 220px; margin-left: auto"
+      type="search"
+      placeholder="Suchen…"
+      [ngModel]="search()"
+      (ngModelChange)="onSearchChange($event)"
+    />
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error" role="alert" style="margin-bottom: var(--space-4)">{{ errorMessage() }}</p>
+  }
+
+  @if (loading() && !result()) {
+    <p class="text-muted">Lade Transaktionen…</p>
+  } @else if (result() && result()!.items.length === 0) {
+    <p class="text-muted">Keine Transaktionen gefunden.</p>
+  } @else if (result()) {
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Bezeichnung</th>
+          <th>Art</th>
+          <th style="text-align: right">Betrag</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tx of result()!.items; track tx.id) {
+          <tr>
+            <td>{{ tx.date | date: 'dd.MM.' }}</td>
+            <td>{{ tx.bezeichnung }}</td>
+            <td>
+              @if (tx.type === 'Einnahme') {
+                <span class="tag tag-neutral">Einnahme</span>
+              } @else if (tx.art === 'Fix') {
+                <span class="tag tag-accent">Fix</span>
+              } @else {
+                <span class="tag tag-accent-2">Variabel</span>
+              }
+            </td>
+            <td style="text-align: right">
+              <span [class.amt-pos]="tx.type === 'Einnahme'" [class.amt-neg]="tx.type === 'Ausgabe'">
+                {{ tx.type === 'Ausgabe' ? '−' : '+' }}{{ tx.amount | currency: 'EUR' }}
+              </span>
+            </td>
+            <td style="text-align: right; white-space: nowrap">
+              <button class="icon-btn" aria-label="Bearbeiten" (click)="editTransaction(tx)">
+                <app-icon name="pencil" [size]="14" />
+              </button>
+              <button class="icon-btn" aria-label="Löschen" (click)="deleteTransaction(tx)">
+                <app-icon name="trash" [size]="14" />
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: var(--space-4)">
+      <p style="font-size: 12px; opacity: 0.5; margin: 0">
+        {{ rangeStart() }}–{{ rangeEnd() }} von {{ result()!.totalCount }}
+      </p>
+      <div style="display: flex; gap: var(--space-2)">
+        <button type="button" class="btn btn-secondary" [disabled]="page() <= 1" (click)="previousPage()">Zurück</button>
+        <button type="button" class="btn btn-secondary" [disabled]="rangeEnd() >= result()!.totalCount" (click)="nextPage()">Weiter</button>
+      </div>
+    </div>
+  }
+</div>

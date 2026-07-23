@@ -1,0 +1,101 @@
+<div class="scrn-page">
+  <div class="scrn-row">
+    <h1 class="scrn-h1">Übersicht</h1>
+    <div style="display: flex; align-items: center; gap: var(--space-3)">
+      <div class="seg">
+        <label class="seg-opt">
+          <input type="radio" name="period" [checked]="period() === 'Month'" (change)="setPeriod('Month')" />
+          Monat
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="period" [checked]="period() === 'Year'" (change)="setPeriod('Year')" />
+          Jahr
+        </label>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 13px">
+        <button type="button" class="icon-btn" aria-label="Vorheriger Zeitraum" (click)="stepPeriod(-1)">
+          <app-icon name="arrow-left" [size]="12" />
+        </button>
+        <span style="opacity: 0.7; min-width: 110px; text-align: center">{{ periodLabel() }}</span>
+        <button type="button" class="icon-btn" aria-label="Nächster Zeitraum" (click)="stepPeriod(1)">
+          <app-icon name="arrow-left" [size]="12" style="transform: rotate(180deg)" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (loading() && !summary()) {
+    <p class="text-muted">Lade Übersicht…</p>
+  } @else if (summary(); as s) {
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-6)">
+      <div class="card">
+        <div class="stat">
+          <span class="stat-label">Einnahmen</span>
+          <span class="stat-val">{{ s.einnahmen | currency: 'EUR' }}</span>
+          <span class="stat-meta">{{ s.einnahmenCount }} Buchungen</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stat">
+          <span class="stat-label">Ausgaben</span>
+          <span class="stat-val">{{ s.ausgaben | currency: 'EUR' }}</span>
+          <span class="stat-meta">{{ s.ausgabenCount }} Buchungen</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stat">
+          <span class="stat-label">Saldo</span>
+          <span class="stat-val" style="color: var(--color-accent-700)">{{ s.saldo | currency: 'EUR' }}</span>
+          <span class="stat-meta">Stand {{ s.stand | date: 'dd.MM.yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6)">
+      <div>
+        <div class="stat-label" style="margin-bottom: var(--space-3)">Ausgaben nach Art</div>
+        <div class="bar-track" style="margin-bottom: var(--space-2)">
+          <div [style.width.%]="fixPercent()" style="background: var(--color-accent-500)"></div>
+          <div [style.width.%]="variabelPercent()" style="background: var(--color-accent-2-400)"></div>
+        </div>
+        <div style="display: flex; gap: var(--space-4); font-size: 12px">
+          <span style="display: flex; align-items: center; gap: 6px">
+            <span style="width: 9px; height: 9px; border-radius: 2px; background: var(--color-accent-500); display: inline-block"></span>
+            Fix · {{ s.ausgabenFix | currency: 'EUR' }}
+          </span>
+          <span style="display: flex; align-items: center; gap: 6px">
+            <span style="width: 9px; height: 9px; border-radius: 2px; background: var(--color-accent-2-400); display: inline-block"></span>
+            Variabel · {{ s.ausgabenVariabel | currency: 'EUR' }}
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <div class="stat-label" style="margin-bottom: var(--space-3)">Letzte Transaktionen</div>
+        @if (s.letzteTransaktionen.length === 0) {
+          <p class="text-muted" style="font-size: 13px">Noch keine Transaktionen in diesem Zeitraum.</p>
+        }
+        @for (tx of s.letzteTransaktionen; track tx.id) {
+          <div class="mini-row">
+            <span>
+              {{ tx.bezeichnung }}
+              @if (tx.type === 'Einnahme') {
+                <span class="tag tag-neutral" style="margin-left: 8px">Einnahme</span>
+              } @else if (tx.art === 'Fix') {
+                <span class="tag tag-accent" style="margin-left: 8px">Fix</span>
+              } @else {
+                <span class="tag tag-accent-2" style="margin-left: 8px">Variabel</span>
+              }
+            </span>
+            <span [class.amt-pos]="tx.type === 'Einnahme'" [class.amt-neg]="tx.type === 'Ausgabe'">
+              {{ tx.type === 'Ausgabe' ? '−' : '+' }}{{ tx.amount | currency: 'EUR' }}
+            </span>
+          </div>
+        }
+        <p style="margin-top: var(--space-3)">
+          <a routerLink="/transaktionen" style="font-size: 13px">Alle Transaktionen ansehen →</a>
+        </p>
+      </div>
+    </div>
+  }
+</div>

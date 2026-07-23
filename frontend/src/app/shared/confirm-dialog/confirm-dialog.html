@@ -1,0 +1,12 @@
+<div class="dialog" role="alertdialog" aria-labelledby="confirm-dialog-title">
+  <div class="dialog-title" id="confirm-dialog-title">{{ data.title }}</div>
+  <div class="dialog-body">{{ data.message }}</div>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-secondary" (click)="cancel()">
+      {{ data.cancelLabel ?? 'Abbrechen' }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="confirm()">
+      {{ data.confirmLabel ?? 'Bestätigen' }}
+    </button>
+  </div>
+</div>

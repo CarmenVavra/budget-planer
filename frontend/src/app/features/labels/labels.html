@@ -1,0 +1,102 @@
+<div class="scrn-page">
+  <h1 class="scrn-h1" style="margin-bottom: 6px">Wiederkehrende Ausgabenbezeichnungen</h1>
+  <p class="text-muted" style="font-size: 13px; margin: 0 0 var(--space-6)">
+    Lege Bezeichnungen wie „Miete“ oder „Tanken“ einmal an und wähle sie beim Erfassen einer Ausgabe wieder aus.
+  </p>
+
+  <div style="display: flex; gap: var(--space-3); margin-bottom: var(--space-6); align-items: center; flex-wrap: wrap">
+    <input
+      class="input"
+      style="flex: 1; min-width: 200px"
+      type="text"
+      placeholder="z. B. Fitnessstudio"
+      [ngModel]="newName()"
+      (ngModelChange)="newName.set($event)"
+      (keydown.enter)="addLabel()"
+    />
+    <div class="seg">
+      <label class="seg-opt">
+        <input type="radio" name="new-type" [checked]="newType() === 'Fix'" (change)="newType.set('Fix')" />
+        Fix
+      </label>
+      <label class="seg-opt">
+        <input type="radio" name="new-type" [checked]="newType() === 'Variabel'" (change)="newType.set('Variabel')" />
+        Variabel
+      </label>
+    </div>
+    <button type="button" class="btn btn-primary" [disabled]="adding()" (click)="addLabel()">
+      <app-icon name="plus" [size]="14" />
+      Hinzufügen
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="field-error" role="alert" style="margin-bottom: var(--space-4)">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="text-muted">Lade Bezeichnungen…</p>
+  } @else if (labels().length === 0) {
+    <p class="text-muted">Noch keine Bezeichnungen angelegt.</p>
+  } @else {
+    <div style="display: flex; flex-direction: column">
+      @for (label of labels(); track label.id) {
+        @if (editingId() === label.id) {
+          <div class="mini-row">
+            <div style="display: flex; gap: var(--space-2); align-items: center; flex: 1">
+              <input
+                class="input"
+                style="max-width: 220px"
+                type="text"
+                [ngModel]="editName()"
+                (ngModelChange)="editName.set($event)"
+              />
+              <div class="seg">
+                <label class="seg-opt">
+                  <input type="radio" name="edit-type-{{ label.id }}" [checked]="editType() === 'Fix'" (change)="editType.set('Fix')" />
+                  Fix
+                </label>
+                <label class="seg-opt">
+                  <input type="radio" name="edit-type-{{ label.id }}" [checked]="editType() === 'Variabel'" (change)="editType.set('Variabel')" />
+                  Variabel
+                </label>
+              </div>
+              @if (editError()) {
+                <span class="field-error">{{ editError() }}</span>
+              }
+            </div>
+            <span style="display: flex; gap: 4px">
+              <button type="button" class="btn btn-secondary" style="font-size: 12px" (click)="cancelEdit()">Abbrechen</button>
+              <button type="button" class="btn btn-primary" style="font-size: 12px" (click)="saveEdit(label)">Speichern</button>
+            </span>
+          </div>
+        } @else {
+          <div class="mini-row">
+            <span
+              class="tag"
+              style="margin-right: auto"
+              [class.tag-accent]="label.type === 'Fix'"
+              [class.tag-accent-2]="label.type === 'Variabel'"
+            >
+              {{ label.name }}
+            </span>
+            <span class="stat-meta" style="flex: 0 0 180px; text-align: center; white-space: nowrap">
+              {{ label.type === 'Fix' ? 'Fix' : 'Variabel' }}
+              @if (label.lastUsed) {
+                · zuletzt {{ label.lastUsed | date: 'dd.MM.yyyy' }}
+              }
+            </span>
+            <span style="display: flex; gap: 4px; flex: 0 0 auto">
+              <button class="icon-btn" aria-label="Bearbeiten" (click)="startEdit(label)">
+                <app-icon name="pencil" [size]="15" />
+              </button>
+              <button class="icon-btn" aria-label="Löschen" (click)="deleteLabel(label)">
+                <app-icon name="trash" [size]="15" />
+              </button>
+            </span>
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,73 @@
+<app-auth-shell>
+  <app-icon icon name="mail" [size]="22" />
+
+  <div style="width: 100%; text-align: left">
+    <h1 style="font-size: 22px; margin: 0 0 4px">Konto erstellen</h1>
+    <p class="text-muted" style="font-size: 13px; margin: 0">
+      Deine Daten bleiben privat — nur du siehst deine Einnahmen und Ausgaben.
+    </p>
+  </div>
+
+  <form style="width: 100%; display: grid; gap: var(--space-3)" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="reg-email">E-Mail</label>
+      <input
+        id="reg-email"
+        class="input"
+        type="email"
+        placeholder="du@beispiel.de"
+        autocomplete="email"
+        formControlName="email"
+        [class.has-error]="form.controls.email.invalid && form.controls.email.touched"
+      />
+      @if (form.controls.email.invalid && form.controls.email.touched) {
+        <p class="field-error">Bitte gib eine gültige E-Mail-Adresse ein.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="reg-password">Passwort</label>
+      <input
+        id="reg-password"
+        class="input"
+        type="password"
+        placeholder="Mindestens 8 Zeichen"
+        autocomplete="new-password"
+        formControlName="password"
+        [class.has-error]="form.controls.password.invalid && form.controls.password.touched"
+      />
+      @if (form.controls.password.hasError('minlength') && form.controls.password.touched) {
+        <p class="field-error">Mindestens 8 Zeichen.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="reg-password-confirm">Passwort bestätigen</label>
+      <input
+        id="reg-password-confirm"
+        class="input"
+        type="password"
+        placeholder="Passwort wiederholen"
+        autocomplete="new-password"
+        formControlName="passwordConfirm"
+        [class.has-error]="form.hasError('passwordMismatch') && form.controls.passwordConfirm.touched"
+      />
+      @if (form.hasError('passwordMismatch') && form.controls.passwordConfirm.touched) {
+        <p class="field-error">Die Passwörter stimmen nicht überein.</p>
+      }
+    </div>
+
+    @if (errorMessage()) {
+      <p class="field-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="submitting()">
+      {{ submitting() ? 'Konto wird erstellt…' : 'Konto erstellen' }}
+    </button>
+  </form>
+
+  <p class="text-muted" style="font-size: 13px; margin: 0">
+    Bereits registriert?
+    <a routerLink="/login" style="color: var(--color-accent-700)">Anmelden</a>
+  </p>
+</app-auth-shell>

@@ -1,0 +1,25 @@
+# --- Backend (.NET) ---
+backend/**/bin/
+backend/**/obj/
+backend/**/*.db
+backend/**/*.db-shm
+backend/**/*.db-wal
+backend/**/appsettings.Local.json
+*.user
+
+# --- Frontend (Angular) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/npm-debug.log*
+
+# --- Editors / OS ---
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.claude/settings.local.json
+
+# --- Misc ---
+*.log

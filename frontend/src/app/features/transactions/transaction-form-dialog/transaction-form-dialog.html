@@ -1,0 +1,127 @@
+<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="tx-dialog-title">
+  <div class="dialog-title" id="tx-dialog-title">
+    {{ isEdit ? 'Transaktion bearbeiten' : art() === 'Einnahme' ? 'Neue Einnahme' : 'Neue Ausgabe' }}
+  </div>
+
+  <form class="dialog-body" [formGroup]="form" (ngSubmit)="submit()">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4)">
+      <div class="field">
+        <label for="tx-amount">Betrag</label>
+        <input
+          id="tx-amount"
+          class="input"
+          type="text"
+          inputmode="decimal"
+          placeholder="0,00 €"
+          formControlName="amount"
+          [class.has-error]="form.controls.amount.invalid && form.controls.amount.touched"
+        />
+        @if (form.controls.amount.invalid && form.controls.amount.touched) {
+          <p class="field-error">Bitte gib einen gültigen Betrag an.</p>
+        }
+      </div>
+      <div class="field">
+        <label for="tx-date">Datum</label>
+        <input
+          id="tx-date"
+          class="input"
+          type="date"
+          formControlName="date"
+          [class.has-error]="form.controls.date.invalid && form.controls.date.touched"
+        />
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom: var(--space-4)">
+      <span id="tx-art-label" class="field-label">Art</span>
+      <div class="seg" role="radiogroup" aria-labelledby="tx-art-label">
+        <label class="seg-opt">
+          <input type="radio" name="art" [checked]="art() === 'Einnahme'" (change)="setArt('Einnahme')" />
+          Einnahme
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="art" [checked]="art() === 'Fix'" (change)="setArt('Fix')" />
+          Fix
+        </label>
+        <label class="seg-opt">
+          <input type="radio" name="art" [checked]="art() === 'Variabel'" (change)="setArt('Variabel')" />
+          Variabel
+        </label>
+      </div>
+    </div>
+
+    @if (art() === 'Einnahme') {
+      <div class="field" style="margin-bottom: var(--space-4)">
+        <label for="tx-description">Bezeichnung</label>
+        <input
+          id="tx-description"
+          class="input"
+          type="text"
+          placeholder="z. B. Gehalt"
+          formControlName="description"
+        />
+      </div>
+    } @else {
+      <div class="field" style="margin-bottom: var(--space-4)">
+        <span class="field-label">Bezeichnung</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; align-items: center">
+          @if (labelsLoading()) {
+            <span class="text-muted" style="font-size: 13px">Lade Bezeichnungen…</span>
+          }
+          @for (label of filteredLabels(); track label.id) {
+            <span
+              class="tag"
+              [class.tag-accent]="selectedLabelId() === label.id"
+              [class.tag-outline]="selectedLabelId() !== label.id"
+              style="cursor: pointer"
+              role="button"
+              tabindex="0"
+              (click)="selectLabel(label)"
+              (keydown.enter)="selectLabel(label)"
+            >
+              {{ label.name }}
+            </span>
+          }
+
+          @if (!addingLabel()) {
+            <button type="button" class="btn btn-ghost" style="padding: 5px 12px; font-size: 12px" (click)="startAddLabel()">
+              <app-icon name="plus" [size]="12" />
+              Neue Bezeichnung
+            </button>
+          }
+        </div>
+
+        @if (addingLabel()) {
+          <div style="display: flex; gap: 8px; margin-top: 8px">
+            <input
+              class="input"
+              type="text"
+              placeholder="z. B. Fitnessstudio"
+              [ngModel]="newLabelName()"
+              (ngModelChange)="newLabelName.set($event)"
+              [ngModelOptions]="{ standalone: true }"
+              (keydown.enter)="$event.preventDefault(); confirmAddLabel()"
+            />
+            <button type="button" class="btn btn-primary" style="font-size: 13px" (click)="confirmAddLabel()">
+              Hinzufügen
+            </button>
+          </div>
+          @if (newLabelError()) {
+            <p class="field-error">{{ newLabelError() }}</p>
+          }
+        }
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <p class="field-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Abbrechen</button>
+      <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+        {{ submitting() ? 'Speichert…' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+</div>

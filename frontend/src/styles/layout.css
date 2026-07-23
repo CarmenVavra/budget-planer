@@ -1,0 +1,104 @@
+/* Ported from the mockup harness's shared <style> block (Budget-Planer.dc.html) —
+   these aren't part of the Broadsheet design-system package itself, but every
+   real screen (dashboard/transactions/labels) is built from them. */
+
+.scrn-page {
+  padding: var(--space-6) var(--space-8) var(--space-8);
+}
+.scrn-h1 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 28px;
+  margin: 0;
+}
+.scrn-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.stat-val {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 30px;
+}
+.stat-meta {
+  font-size: 12px;
+  opacity: 0.55;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--color-divider);
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+}
+.chip-active {
+  background: var(--color-accent-100);
+  border-color: var(--color-accent-300);
+  color: var(--color-accent-800);
+}
+
+.bar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--color-neutral-200);
+  overflow: hidden;
+  display: flex;
+}
+
+.mini-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+.mini-row:last-child {
+  border-bottom: none;
+}
+
+.amt-neg {
+  font-family: var(--font-heading);
+}
+.amt-pos {
+  font-family: var(--font-heading);
+  color: var(--color-accent-700);
+}
+
+.icon-btn {
+  border: none;
+  background: none;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-text);
+  opacity: 0.6;
+  display: inline-flex;
+}
+.icon-btn:hover {
+  opacity: 1;
+  background: var(--color-neutral-200);
+}
