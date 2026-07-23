@@ -16,9 +16,12 @@
           formControlName="amount"
           [class.has-error]="form.controls.amount.invalid && form.controls.amount.touched"
         />
-        @if (form.controls.amount.invalid && form.controls.amount.touched) {
-          <p class="field-error">Bitte gib einen gültigen Betrag an.</p>
-        }
+        <p
+          class="field-error"
+          [style.visibility]="form.controls.amount.invalid && form.controls.amount.touched ? 'visible' : 'hidden'"
+        >
+          Ungültiger Betrag
+        </p>
       </div>
       <div class="field">
         <label for="tx-date">Datum</label>
