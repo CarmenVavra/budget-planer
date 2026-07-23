@@ -102,3 +102,59 @@
   opacity: 1;
   background: var(--color-neutral-200);
 }
+
+.autocomplete-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+}
+.autocomplete-panel-above {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.autocomplete-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.autocomplete-option:hover,
+.autocomplete-option.autocomplete-option-active {
+  background: var(--color-accent-100);
+  color: var(--color-accent-800);
+}
+.autocomplete-option-create {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-divider);
+  color: var(--color-accent);
+}
+.autocomplete-option-create:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.autocomplete-empty {
+  padding: 8px 10px;
+  font-size: 13px;
+  opacity: 0.6;
+}

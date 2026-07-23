@@ -62,53 +62,65 @@
         />
       </div>
     } @else {
-      <div class="field" style="margin-bottom: var(--space-4)">
-        <span class="field-label">Bezeichnung</span>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; align-items: center">
-          @if (labelsLoading()) {
-            <span class="text-muted" style="font-size: 13px">Lade Bezeichnungen…</span>
-          }
-          @for (label of filteredLabels(); track label.id) {
-            <span
-              class="tag"
-              [class.tag-accent]="selectedLabelId() === label.id"
-              [class.tag-outline]="selectedLabelId() !== label.id"
-              style="cursor: pointer"
-              role="button"
-              tabindex="0"
-              (click)="selectLabel(label)"
-              (keydown.enter)="selectLabel(label)"
-            >
-              {{ label.name }}
-            </span>
-          }
+      <div class="field" style="margin-bottom: var(--space-4); position: relative">
+        <label for="tx-label-search">Bezeichnung</label>
+        <input
+          id="tx-label-search"
+          #labelInput
+          class="input"
+          type="text"
+          autocomplete="off"
+          placeholder="Bezeichnung suchen oder neu anlegen"
+          [ngModel]="labelSearch()"
+          (ngModelChange)="onLabelSearchInput($event)"
+          [ngModelOptions]="{ standalone: true }"
+          (focus)="openDropdown()"
+          (blur)="closeDropdownDelayed()"
+          (keydown)="onLabelInputKeydown($event)"
+          [class.has-error]="!!labelError()"
+        />
 
-          @if (!addingLabel()) {
-            <button type="button" class="btn btn-ghost" style="padding: 5px 12px; font-size: 12px" (click)="startAddLabel()">
-              <app-icon name="plus" [size]="12" />
-              Neue Bezeichnung
-            </button>
-          }
-        </div>
-
-        @if (addingLabel()) {
-          <div style="display: flex; gap: 8px; margin-top: 8px">
-            <input
-              class="input"
-              type="text"
-              placeholder="z. B. Fitnessstudio"
-              [ngModel]="newLabelName()"
-              (ngModelChange)="newLabelName.set($event)"
-              [ngModelOptions]="{ standalone: true }"
-              (keydown.enter)="$event.preventDefault(); confirmAddLabel()"
-            />
-            <button type="button" class="btn btn-primary" style="font-size: 13px" (click)="confirmAddLabel()">
-              Hinzufügen
-            </button>
+        @if (dropdownOpen()) {
+          <div
+            class="autocomplete-panel elev-md"
+            [class.autocomplete-panel-above]="panelPosition() === 'above'"
+            [style.max-height.px]="panelMaxHeight()"
+          >
+            @if (labelsLoading()) {
+              <div class="autocomplete-empty">Lade Bezeichnungen…</div>
+            } @else {
+              @for (label of filteredLabels(); track label.id) {
+                <button
+                  type="button"
+                  class="autocomplete-option"
+                  [class.autocomplete-option-active]="selectedLabelId() === label.id"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="selectLabel(label)"
+                >
+                  {{ label.name }}
+                </button>
+              }
+              @if (showCreateOption()) {
+                <button
+                  type="button"
+                  class="autocomplete-option autocomplete-option-create"
+                  [disabled]="creatingLabel()"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="createLabelFromSearch()"
+                >
+                  <app-icon name="plus" [size]="12" />
+                  {{ creatingLabel() ? 'Wird angelegt…' : '„' + labelSearch().trim() + '“ neu anlegen' }}
+                </button>
+              }
+              @if (!labelsLoading() && filteredLabels().length === 0 && !showCreateOption()) {
+                <div class="autocomplete-empty">Keine Bezeichnungen vorhanden.</div>
+              }
+            }
           </div>
-          @if (newLabelError()) {
-            <p class="field-error">{{ newLabelError() }}</p>
-          }
+        }
+
+        @if (labelError()) {
+          <p class="field-error">{{ labelError() }}</p>
         }
       </div>
     }
