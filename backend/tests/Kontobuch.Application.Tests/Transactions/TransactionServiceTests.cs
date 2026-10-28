@@ -44,13 +44,39 @@ public class TransactionServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_Ausgabe_WithoutLabelId_ThrowsValidationException()
+    public async Task CreateAsync_Ausgabe_WithoutLabelIdOrDescription_ThrowsValidationException()
     {
         var act = () => _sut.CreateAsync(
             new UpsertTransactionRequest(TransactionType.Ausgabe, 10m, new DateOnly(2026, 7, 22), null, null, null),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
+    public async Task CreateAsync_Ausgabe_WithoutLabelId_ButWithDescription_CreatesOneOffVariabelTransaction()
+    {
+        var result = await _sut.CreateAsync(
+            new UpsertTransactionRequest(TransactionType.Ausgabe, 12.5m, new DateOnly(2026, 7, 22), null, "Parkticket", null),
+            CancellationToken.None);
+
+        result.Bezeichnung.Should().Be("Parkticket");
+        result.Art.Should().Be(LabelType.Variabel);
+        result.LabelId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_FilterByVariabelArt_IncludesOneOffTransactionsWithoutLabel()
+    {
+        var variabel = await _labels.CreateAsync(new CreateLabelRequest("Tanken", LabelType.Variabel), CancellationToken.None);
+        await _sut.CreateAsync(
+            new UpsertTransactionRequest(TransactionType.Ausgabe, 50m, new DateOnly(2026, 7, 10), variabel.Id, null, null), CancellationToken.None);
+        await _sut.CreateAsync(
+            new UpsertTransactionRequest(TransactionType.Ausgabe, 12.5m, new DateOnly(2026, 7, 22), null, "Parkticket", null), CancellationToken.None);
+
+        var result = await _sut.GetAllAsync(new TransactionQuery(Art: LabelType.Variabel), CancellationToken.None);
+
+        result.Items.Should().HaveCount(2);
     }
 
     [Fact]
@@ -131,5 +157,18 @@ public class TransactionServiceTests
         summary.AusgabenVariabel.Should().Be(68.5m);
         summary.Saldo.Should().Be(2450m - 848.5m);
         summary.LetzteTransaktionen.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_OneOffAusgabeWithoutLabel_CountsTowardVariabel()
+    {
+        await _sut.CreateAsync(
+            new UpsertTransactionRequest(TransactionType.Ausgabe, 12.5m, new DateOnly(2026, 7, 22), null, "Parkticket", null), CancellationToken.None);
+
+        var summary = await _sut.GetSummaryAsync(SummaryPeriod.Month, new DateOnly(2026, 7, 22), CancellationToken.None);
+
+        summary.AusgabenVariabel.Should().Be(12.5m);
+        summary.Ausgaben.Should().Be(12.5m);
+        summary.AusgabenCount.Should().Be(1);
     }
 }

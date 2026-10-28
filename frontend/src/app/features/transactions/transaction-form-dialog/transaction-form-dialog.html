@@ -103,23 +103,43 @@
                   {{ label.name }}
                 </button>
               }
-              @if (showCreateOption()) {
-                <button
-                  type="button"
-                  class="autocomplete-option autocomplete-option-create"
-                  [disabled]="creatingLabel()"
-                  (mousedown)="$event.preventDefault()"
-                  (click)="createLabelFromSearch()"
-                >
-                  <app-icon name="plus" [size]="12" />
-                  {{ creatingLabel() ? 'Wird angelegt…' : '„' + labelSearch().trim() + '“ neu anlegen' }}
-                </button>
+              @if (showCreateOption() || showUseOnceOption()) {
+                <div class="autocomplete-actions">
+                  @if (showCreateOption()) {
+                    <button
+                      type="button"
+                      class="autocomplete-option autocomplete-option-accent"
+                      [disabled]="creatingLabel()"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="createLabelFromSearch()"
+                    >
+                      <app-icon name="plus" [size]="12" />
+                      {{ creatingLabel() ? 'Wird angelegt…' : '„' + labelSearch().trim() + '“ als Bezeichnung speichern' }}
+                    </button>
+                  }
+                  @if (showUseOnceOption()) {
+                    <button
+                      type="button"
+                      class="autocomplete-option"
+                      (mousedown)="$event.preventDefault()"
+                      (click)="useSearchAsFreeText()"
+                    >
+                      „{{ labelSearch().trim() }}“ nur einmalig verwenden
+                    </button>
+                  }
+                </div>
               }
               @if (!labelsLoading() && filteredLabels().length === 0 && !showCreateOption()) {
                 <div class="autocomplete-empty">Keine Bezeichnungen vorhanden.</div>
               }
             }
           </div>
+        }
+
+        @if (oneTimeLabel() && labelSearch().trim()) {
+          <p class="text-muted" style="font-size: 12px; margin-top: 4px">
+            Wird nur für diese Transaktion verwendet, nicht als Bezeichnung gespeichert.
+          </p>
         }
 
         @if (labelError()) {

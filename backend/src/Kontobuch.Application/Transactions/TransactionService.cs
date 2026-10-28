@@ -14,13 +14,15 @@ public class TransactionService(
     ICurrentUserService currentUser,
     IValidator<UpsertTransactionRequest> validator) : ITransactionService
 {
+    // A label-less Ausgabe only ever exists as a one-off the user chose not to save — Fix always
+    // requires a saved Bezeichnung — so its Art is implicitly Variabel.
     private static readonly Expression<Func<Transaction, TransactionDto>> ToDto = t => new TransactionDto(
         t.Id,
         t.Type,
         t.Amount,
         t.Date,
         t.Label != null ? t.Label.Name : (t.Description ?? string.Empty),
-        t.Label != null ? t.Label.Type : (LabelType?)null,
+        t.Label != null ? t.Label.Type : (t.Type == TransactionType.Ausgabe ? LabelType.Variabel : (LabelType?)null),
         t.LabelId,
         t.Note);
 
@@ -36,7 +38,10 @@ public class TransactionService(
 
         if (query.Art.HasValue)
         {
-            q = q.Where(t => t.Type == TransactionType.Ausgabe && t.Label != null && t.Label.Type == query.Art.Value);
+            // Label-less Ausgaben are implicitly Variabel (see ToDto), so they must match that filter too.
+            q = query.Art.Value == LabelType.Fix
+                ? q.Where(t => t.Type == TransactionType.Ausgabe && t.Label != null && t.Label.Type == LabelType.Fix)
+                : q.Where(t => t.Type == TransactionType.Ausgabe && (t.Label == null || t.Label.Type == LabelType.Variabel));
         }
 
         if (query.LabelId.HasValue)
@@ -89,7 +94,14 @@ public class TransactionService(
         // SQLite cannot translate SUM() over decimal columns to SQL (they're stored as TEXT for
         // precision), so the aggregation is done client-side after a single materializing query.
         var periodAmounts = await periodTx
-            .Select(t => new { t.Type, t.Amount, LabelType = t.Label != null ? t.Label.Type : (LabelType?)null })
+            .Select(t => new
+            {
+                t.Type,
+                t.Amount,
+                LabelType = t.Label != null
+                    ? t.Label.Type
+                    : (t.Type == TransactionType.Ausgabe ? LabelType.Variabel : (LabelType?)null),
+            })
             .ToListAsync(ct);
 
         var einnahmen = periodAmounts.Where(t => t.Type == TransactionType.Einnahme).Sum(t => t.Amount);
@@ -142,7 +154,7 @@ public class TransactionService(
             Date = request.Date,
             Note = NormalizeOptional(request.Note),
             LabelId = label?.Id,
-            Description = request.Type == TransactionType.Einnahme ? request.Description!.Trim() : null,
+            Description = ResolveDescription(label, request.Description),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -168,7 +180,7 @@ public class TransactionService(
         transaction.Date = request.Date;
         transaction.Note = NormalizeOptional(request.Note);
         transaction.LabelId = label?.Id;
-        transaction.Description = request.Type == TransactionType.Einnahme ? request.Description!.Trim() : null;
+        transaction.Description = ResolveDescription(label, request.Description);
         transaction.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync(ct);
@@ -188,17 +200,21 @@ public class TransactionService(
 
     private async Task<Label?> ResolveLabelAsync(Guid userId, TransactionType type, Guid? labelId, CancellationToken ct)
     {
-        if (type != TransactionType.Ausgabe)
+        // No LabelId is valid for Ausgabe now (a one-off Variabel expense) — only a *given but
+        // invalid* LabelId (wrong owner, deleted) is rejected.
+        if (type != TransactionType.Ausgabe || !labelId.HasValue)
         {
             return null;
         }
 
-        var label = labelId.HasValue
-            ? await db.Labels.FirstOrDefaultAsync(l => l.Id == labelId.Value && l.UserId == userId, ct)
-            : null;
-
-        return label ?? throw new NotFoundException("Bezeichnung wurde nicht gefunden.");
+        return await db.Labels.FirstOrDefaultAsync(l => l.Id == labelId.Value && l.UserId == userId, ct)
+            ?? throw new NotFoundException("Bezeichnung wurde nicht gefunden.");
     }
+
+    // Description is only ever stored when there's no backing Label: always for Einnahme, and for
+    // an Ausgabe the user explicitly chose not to save as a reusable Bezeichnung.
+    private static string? ResolveDescription(Label? label, string? description) =>
+        label == null ? NormalizeOptional(description) : null;
 
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -209,7 +225,7 @@ public class TransactionService(
         t.Amount,
         t.Date,
         label?.Name ?? t.Description ?? string.Empty,
-        label?.Type,
+        label?.Type ?? (t.Type == TransactionType.Ausgabe ? LabelType.Variabel : (LabelType?)null),
         t.LabelId,
         t.Note);
 

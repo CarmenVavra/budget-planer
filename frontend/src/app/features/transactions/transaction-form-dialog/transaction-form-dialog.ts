@@ -70,6 +70,11 @@ export class TransactionFormDialog {
   protected readonly labelSearch = signal(
     this.data.transaction?.type === 'Ausgabe' ? this.data.transaction.bezeichnung : '',
   );
+  // Variabel only: a Bezeichnung the user explicitly chose to use just for this transaction,
+  // without saving it to the reusable Bezeichnungen list. Fix always requires a saved label.
+  protected readonly oneTimeLabel = signal(
+    this.data.transaction?.type === 'Ausgabe' && !this.data.transaction.labelId,
+  );
   protected readonly dropdownOpen = signal(false);
   protected readonly creatingLabel = signal(false);
   protected readonly labelError = signal<string | null>(null);
@@ -91,6 +96,9 @@ export class TransactionFormDialog {
     }
     return !this.labels().some((l) => l.type === this.art() && l.name.toLowerCase() === term.toLowerCase());
   });
+
+  // Only Variabel may skip saving — Fix always requires a persisted Bezeichnung.
+  protected readonly showUseOnceOption = computed(() => this.art() === 'Variabel' && this.showCreateOption());
 
   protected readonly form = this.fb.nonNullable.group({
     amount: [
@@ -121,6 +129,9 @@ export class TransactionFormDialog {
     this.art.set(value);
     this.dropdownOpen.set(false);
     this.labelError.set(null);
+    if (value !== 'Variabel') {
+      this.oneTimeLabel.set(false);
+    }
     if (value === 'Einnahme') {
       this.selectedLabelId.set(null);
       this.labelSearch.set('');
@@ -137,6 +148,7 @@ export class TransactionFormDialog {
     this.labelSearch.set(value);
     this.dropdownOpen.set(true);
     this.labelError.set(null);
+    this.oneTimeLabel.set(false);
     this.updatePanelLayout();
     const selected = this.labels().find((l) => l.id === this.selectedLabelId());
     if (!selected || selected.name !== value) {
@@ -178,6 +190,19 @@ export class TransactionFormDialog {
   protected selectLabel(label: Label): void {
     this.selectedLabelId.set(label.id);
     this.labelSearch.set(label.name);
+    this.oneTimeLabel.set(false);
+    this.dropdownOpen.set(false);
+    this.labelError.set(null);
+  }
+
+  protected useSearchAsFreeText(): void {
+    const name = this.labelSearch().trim();
+    if (!name || this.art() !== 'Variabel') {
+      return;
+    }
+    this.labelSearch.set(name);
+    this.selectedLabelId.set(null);
+    this.oneTimeLabel.set(true);
     this.dropdownOpen.set(false);
     this.labelError.set(null);
   }
@@ -228,9 +253,12 @@ export class TransactionFormDialog {
   }
 
   protected async submit(): Promise<void> {
-    if (this.form.invalid || (this.art() !== 'Einnahme' && !this.selectedLabelId())) {
+    const hasAusgabeBezeichnung =
+      !!this.selectedLabelId() || (this.art() === 'Variabel' && this.oneTimeLabel() && !!this.labelSearch().trim());
+
+    if (this.form.invalid || (this.art() !== 'Einnahme' && !hasAusgabeBezeichnung)) {
       this.form.markAllAsTouched();
-      if (this.art() !== 'Einnahme' && !this.selectedLabelId()) {
+      if (this.art() !== 'Einnahme' && !hasAusgabeBezeichnung) {
         this.errorMessage.set('Bitte wähle eine Bezeichnung aus.');
       }
       return;
@@ -248,7 +276,12 @@ export class TransactionFormDialog {
         amount: parsedAmount,
         date,
         labelId: this.art() === 'Einnahme' ? null : this.selectedLabelId(),
-        description: this.art() === 'Einnahme' ? description.trim() : null,
+        description:
+          this.art() === 'Einnahme'
+            ? description.trim()
+            : this.oneTimeLabel()
+              ? this.labelSearch().trim()
+              : null,
         note: note?.trim() || null,
       };
 
