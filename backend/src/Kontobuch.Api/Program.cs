@@ -57,15 +57,21 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsPolicyName, policy => policy
-        .WithOrigins("http://localhost:4200")
+        .WithOrigins("http://localhost:4200", "http://127.0.0.1:4200")
         .AllowAnyHeader()
         .AllowAnyMethod());
 });
 
 // --- JWT authentication ---
 var jwtSection = builder.Configuration.GetSection(JwtSettings.SectionName);
-var jwtSigningKey = jwtSection["SigningKey"]
-    ?? throw new InvalidOperationException("Jwt:SigningKey ist nicht konfiguriert. Siehe README für 'dotnet user-secrets'.");
+const int minJwtSigningKeyLength = 32;
+var jwtSigningKey = jwtSection["SigningKey"];
+if (string.IsNullOrWhiteSpace(jwtSigningKey) || jwtSigningKey.Length < minJwtSigningKeyLength)
+{
+    throw new InvalidOperationException(
+        $"Jwt:SigningKey ist nicht konfiguriert oder kürzer als {minJwtSigningKeyLength} Zeichen. " +
+        "Entwicklung: start.bat ausführen oder 'dotnet user-secrets set \"Jwt:SigningKey\" <Wert>' im Projekt Kontobuch.Api.");
+}
 var jwtIssuer = jwtSection["Issuer"] ?? "Kontobuch";
 var jwtAudience = jwtSection["Audience"] ?? "Kontobuch";
 

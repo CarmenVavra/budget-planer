@@ -30,6 +30,11 @@ if not exist "frontend\node_modules" (
   popd
 )
 
+rem The JWT signing key lives in the user secrets and never in the repo. Create a random one on first run.
+set "API_DIR=%~dp0backend\src\Kontobuch.Api"
+dotnet user-secrets list --project "%API_DIR%" 2>nul | findstr /r /c:"^Jwt:SigningKey = ." >nul
+if errorlevel 1 call :create_jwt_key || exit /b 1
+
 rem Development enables the automatic database migration and the user-secrets JWT key.
 set "ASPNETCORE_ENVIRONMENT=Development"
 
@@ -43,3 +48,24 @@ start "Kontobuch Frontend" /d "%~dp0frontend" cmd /k npm start -- --port 4200
 echo.
 echo Der erste Start dauert einen Moment. Danach ist die App unter http://localhost:4200 erreichbar.
 echo Zum Beenden stop.bat ausfuehren.
+exit /b 0
+
+:create_jwt_key
+rem A subroutine on purpose: inside a parenthesised block %JWT_KEY% would be expanded before it is set.
+echo Erzeuge JWT-Schluessel fuer die Entwicklung ...
+set "JWT_KEY="
+for /f "delims=" %%k in ('powershell -NoProfile -Command "$b = New-Object byte[] 64; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)"') do set "JWT_KEY=%%k"
+if not defined JWT_KEY (
+  echo FEHLER: JWT-Schluessel konnte nicht erzeugt werden.
+  pause
+  exit /b 1
+)
+dotnet user-secrets set "Jwt:SigningKey" "%JWT_KEY%" --project "%API_DIR%" >nul
+if errorlevel 1 (
+  echo FEHLER: JWT-Schluessel konnte nicht gespeichert werden.
+  set "JWT_KEY="
+  pause
+  exit /b 1
+)
+set "JWT_KEY="
+exit /b 0
