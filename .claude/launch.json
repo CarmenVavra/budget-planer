@@ -5,7 +5,7 @@
       "name": "frontend",
       "runtimeExecutable": "C:\\Users\\carme\\AppData\\Roaming\\nvm\\v25.8.1\\node.exe",
       "runtimeArgs": ["node_modules/@angular/cli/bin/ng.js", "serve"],
-      "port": 4200,
+      "port": 4450,
       "cwd": "frontend"
     }
   ]
