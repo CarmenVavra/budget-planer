@@ -23,3 +23,6 @@ Thumbs.db
 
 # --- Misc ---
 *.log
+
+# --- DevDashboard (lokale Konfiguration) ---
+project.json
